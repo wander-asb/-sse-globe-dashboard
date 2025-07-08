@@ -1,69 +1,51 @@
-The **WebGL Globe** is an open platform for geographic data visualization created by the Google Data Arts Team. We encourage you to copy the code, add your own data, and create your own globes.
+# 🌐 Visualizador de Dados Populacionais em Globo 3D
 
-Check out the examples at https://experiments.withgoogle.com/chrome/globe, and if you create a globe, please [share it with us](http://www.chromeexperiments.com/submit). We post our favorite globes publicly.
+Este projeto exibe um globo 3D interativo que recebe e atualiza automaticamente dados populacionais (ou de magnitude) ao longo do tempo, usando **Server-Sent Events (SSE)** com uma API feita em **FastAPI**.
 
-![](http://4.bp.blogspot.com/-nB6XnTgb4AA/TcLQ4gRBtfI/AAAAAAAAH-U/vb2GuhPN6aM/globe.png)
+---
 
-----
+## 📁 Estrutura
 
-**The WebGL Globe** supports data in `JSON` format, a sample of which you can find [here](https://github.com/dataarts/webgl-globe/blob/master/globe/population909500.json). `webgl-globe` makes heavy use of the [Three.js library](https://github.com/mrdoob/three.js/).
+- `index.html`: Página principal que carrega e renderiza o globo com dados animados.
+- `main.py`: Backend com FastAPI que emite dados em tempo real no endpoint `/eventos`.
+- `Dockerfile` e `docker-compose.yml`: Infraestrutura para rodar backend e frontend juntos.
 
-# Data Format
+---
 
-The following illustrates the `JSON` data format that the globe expects:
+## 🧭 Como Funciona
+
+### Frontend (`index.html`)
+
+- Usa WebGL (como Globe.js) para renderizar um globo.
+- Conecta-se ao backend via `EventSource`:
 
 ```javascript
-var data = [
-    [
-    'seriesA', [ latitude, longitude, magnitude, latitude, longitude, magnitude, ... ]
-    ],
-    [
-    'seriesB', [ latitude, longitude, magnitude, latitude, longitude, magnitude, ... ]
-    ]
-];
+const eventSource = new EventSource('http://localhost:8000/eventos');
+```
+A cada 3 segundos, recebe novos dados em JSON no formato:
+```
+[["2025", [lat1, lon1, mag1, lat2, lon2, mag2, ...]]
 ```
 
-# Basic Usage
+##  Backend (FastAPI)
+- Endpoint /eventos fornece dados via Server-Sent Events (text/event-stream).
+- Os dados são simulados com coordenadas aleatórias e magnitudes inteiras.
+- Cada resposta acumula dados no mesmo formato, permitindo visualização histórica.
 
-The following code polls a `JSON` file (formatted like the one above) for geo-data and adds it to an animated, interactive WebGL globe.
+## 🚀 Como Rodar o Projeto
+- Requisitos
+- Docker
 
-```javascript
-// Where to put the globe?
-var container = document.getElementById( 'container' );
+Docker Compose
 
-// Make the globe
-var globe = new DAT.Globe( container );
+### Passos
+1. Clone o repositório
+2. Execute:
+```
+docker compose up --build
+```
 
-// We're going to ask a file for the JSON data.
-var xhr = new XMLHttpRequest();
-
-// Where do we get the data?
-xhr.open( 'GET', 'myjson.json', true );
-
-// What do we do when we have it?
-xhr.onreadystatechange = function() {
-
-    // If we've received the data
-    if ( xhr.readyState === 4 && xhr.status === 200 ) {
-
-        // Parse the JSON
-        var data = JSON.parse( xhr.responseText );
-
-        // Tell the globe about your JSON data
-        for ( var i = 0; i < data.length; i ++ ) {
-            globe.addData( data[i][1], {format: 'magnitude', name: data[i][0]} );
-        }
-
-        // Create the geometry
-        globe.createPoints();
-
-        // Begin animation
-        globe.animate();
-
-    }
-
-};
-
-// Begin request
-xhr.send( null );
+## 🚀 Como Rodar o Projeto Localmente
+```
+python -m http.server 8080
 ```
